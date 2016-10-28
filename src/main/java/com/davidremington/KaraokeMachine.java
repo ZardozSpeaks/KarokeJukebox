@@ -2,6 +2,7 @@ package com.davidremington;
 
 import com.davidremington.model.Song;
 import com.davidremington.model.SongBook;
+import com.davidremington.model.SongRequest;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,7 +12,7 @@ import java.util.*;
 public class KaraokeMachine {
     private SongBook mSongBook;
     private BufferedReader mReader;
-    private Queue<Song> mSongQueue;
+    private Queue<SongRequest> mSongQueue;
     private Map<String, String> mMenu;
 
 
@@ -52,9 +53,17 @@ public class KaraokeMachine {
                         System.out.printf("%s added!  %n%n", song);
                         break;
                     case "choose":
+                        String singerName = promptForSingerName();
                         String artist = promptForArtist();
                         Song artistSong = promptSongForArtist(artist);
-                        mSongQueue.add(artistSong);
+                        SongRequest songRequest = new SongRequest(singerName, artistSong);
+                        if (mSongQueue.contains(songRequest)) {
+                            System.out.printf("%n%n Whoops %s already requested %s!%n",
+                                                singerName,
+                                                artistSong);
+                                                break;
+                        }
+                        mSongQueue.add(songRequest);
                         System.out.printf("You chose: %s %n", artistSong);
                         break;
                     case "play":
@@ -71,6 +80,11 @@ public class KaraokeMachine {
                 ioe.printStackTrace();
             }
         } while(!choice.equals("quit"));
+    }
+
+    private String promptForSingerName() throws IOException {
+        System.out.println("Enter the singer's name");
+        return mReader.readLine();
     }
 
     private Song promptNewSong() throws IOException {
@@ -114,12 +128,14 @@ public class KaraokeMachine {
     }
 
     public void playNext() {
-        Song song = mSongQueue.poll();
-        if (song == null) {
+        SongRequest songRequest = mSongQueue.poll();
+        if (songRequest == null) {
             System.out.println("Sorry there are no songs in the queue. Use choose" +
                                 "from the menu to add some");
         } else {
-            System.out.printf("%n%n%n Open %s to hear %s by %s %n%n%n",
+            Song song = songRequest.getSong();
+            System.out.printf("%n%n%n Ready %s? Open %s to hear %s by %s %n%n%n",
+                                songRequest.getSingerName(),
                                 song.getVideoUrl(),
                                 song.getTitle(),
                                 song.getArtist());
